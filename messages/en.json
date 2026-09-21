@@ -1,0 +1,99 @@
+{
+	"app": {
+		"name": "Thai Government Jobs",
+		"tagline": "Search government job announcements, save the ones you want, and get an email the moment a matching position opens.",
+		"description": "Public Thai government job announcements from OCSC — search, filter, save, and set up email alerts."
+	},
+	"nav": {
+		"home": "Home",
+		"jobs": "Jobs",
+		"saved": "Saved",
+		"alerts": "Alerts",
+		"dashboard": "Dashboard",
+		"admin": "Admin",
+		"login": "Sign in",
+		"register": "Sign up",
+		"logout": "Sign out",
+		"menu": "Menu"
+	},
+	"common": {
+		"search": "Search",
+		"filters": "Filters",
+		"clear": "Clear",
+		"clearAll": "Clear all",
+		"apply": "Apply",
+		"cancel": "Cancel",
+		"save": "Save",
+		"delete": "Delete",
+		"edit": "Edit",
+		"loading": "Loading…",
+		"retry": "Try again",
+		"language": "Language",
+		"theme": "Theme",
+		"noResults": "No matches",
+		"reset": "Reset"
+	},
+	"jobStatus": {
+		"UPCOMING": "Opening soon",
+		"OPEN": "Open",
+		"CLOSED": "Closed"
+	},
+	"job": {
+		"agency": "Agency",
+		"ministry": "Ministry",
+		"jobType": "Position type",
+		"education": "Education",
+		"province": "Province",
+		"salary": "Salary",
+		"positions": "Openings",
+		"applicationPeriod": "Application period",
+		"deadline": "Deadline",
+		"publishedAt": "Published",
+		"attachments": "Attachments",
+		"viewSource": "View original announcement",
+		"applyNow": "Apply on the agency site",
+		"saveJob": "Save job",
+		"savedJob": "Saved",
+		"createAlert": "Create alert",
+		"nationwide": "Nationwide",
+		"salaryUnit": "THB / month",
+		"daysLeft": "{days} days left",
+		"lastDay": "Last day"
+	},
+	"errors": {
+		"generic": "Something went wrong. Please try again.",
+		"notFound": "We couldn't find what you were looking for.",
+		"empty": "No jobs match these filters.",
+		"emptyHint": "Try removing a filter or using a broader search term.",
+		"noJobsYet": "No announcements yet",
+		"noJobsYetHint": "Announcements are imported from job.ocsc.go.th automatically. Check back shortly."
+	},
+	"jobsPage": {
+		"title": "Jobs",
+		"subtitle": "Search government job announcements from OCSC. Filter by province, position type, education and salary.",
+		"resultCount": "{count, plural, =1 {# position} other {# positions}}",
+		"allStatuses": "All",
+		"sortBy": "Sort by",
+		"sortNewest": "Newest",
+		"sortClosingSoon": "Closing soon",
+		"sortSalaryHigh": "Highest salary",
+		"sortTitle": "Title A–Z"
+	},
+	"filters": {
+		"keywordPlaceholder": "Position, agency or ministry",
+		"provinceStrict": "Selected provinces only",
+		"provinceStrictHint": "Hide announcements that are open nationwide",
+		"anySalary": "Any salary",
+		"salaryBand1": "Up to 15,000",
+		"salaryBand2": "15,000–25,000",
+		"salaryBand3": "25,000–40,000",
+		"salaryBand4": "40,000 and above"
+	},
+	"home": {
+		"openNow": "{count, plural, =1 {# position open now} other {# positions open now}}",
+		"closingSoon": "Closing soon",
+		"latest": "Latest announcements",
+		"viewAll": "View all",
+		"noJobs": "No announcements yet"
+	}
+}
