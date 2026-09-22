@@ -51,9 +51,9 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
 				<SidebarNav onNavigate={onNavigate} />
 			</div>
 
-			<div className="border-t p-3">
-				<SidebarUser onNavigate={onNavigate} />
-			</div>
+			{/* No wrapper: `SidebarUser` brings its own divider, because signed out on desktop it
+			    renders nothing at all and a border left here would outline the emptiness. */}
+			<SidebarUser onNavigate={onNavigate} />
 		</div>
 	);
 }
@@ -109,10 +109,13 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
 							<LocaleSwitcher />
 						</Suspense>
 						<ThemeToggle />
-						{/* The sidebar owns the account once it is on screen; two copies is one too many. */}
-						<div className="lg:hidden">
-							<AccountMenu />
-						</div>
+						{/*
+						 * The two halves of this split live in `AccountMenu` itself, which is the only
+						 * thing that knows whether anyone is signed in: signed in, the sidebar owns the
+						 * account and this hides from `lg` up; signed out, this is the only copy at any
+						 * width.
+						 */}
+						<AccountMenu />
 					</div>
 				</header>
 

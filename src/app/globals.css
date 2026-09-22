@@ -115,41 +115,47 @@
 
 .dark {
   /* Deep blue-black, never #000: a true black kills every shadow and makes the elevation
-     scale meaningless. */
-  --background: oklch(0.172 0.013 262);
-  --foreground: oklch(0.968 0.004 255);
-  --card: oklch(0.215 0.016 262);
-  --card-foreground: oklch(0.968 0.004 255);
-  --popover: oklch(0.225 0.017 262);
-  --popover-foreground: oklch(0.968 0.004 255);
+     scale meaningless. The chroma is carried further here than a usual dark theme — the
+     surfaces are navy rather than grey, which is what lets the blue light in the hero read
+     as light falling on a surface instead of a coloured shape pasted onto one. */
+  --background: oklch(0.145 0.030 264);
+  --foreground: oklch(0.968 0.006 258);
+  --card: oklch(0.195 0.038 264);
+  --card-foreground: oklch(0.968 0.006 258);
+  --popover: oklch(0.215 0.040 264);
+  --popover-foreground: oklch(0.968 0.006 258);
 
-  --primary: oklch(0.70 0.142 258);
-  --primary-foreground: oklch(0.17 0.04 262);
-  --secondary: oklch(0.268 0.017 262);
-  --secondary-foreground: oklch(0.968 0.004 255);
-  --muted: oklch(0.268 0.017 262);
-  --muted-foreground: oklch(0.712 0.018 258);
-  --accent: oklch(0.305 0.045 261);
-  --accent-foreground: oklch(0.90 0.05 259);
+  /* Darker and far more saturated than the usual dark-mode lightening of a brand colour,
+     because this one is a filled surface first: white on it clears 4.5:1, which a pale
+     blue never does. Icons and accents that need more lift use --chart-1 instead. */
+  --primary: oklch(0.57 0.205 262);
+  --primary-foreground: oklch(0.99 0.004 255);
+  --secondary: oklch(0.255 0.035 264);
+  --secondary-foreground: oklch(0.968 0.006 258);
+  --muted: oklch(0.255 0.035 264);
+  --muted-foreground: oklch(0.715 0.028 260);
+  --accent: oklch(0.31 0.06 262);
+  --accent-foreground: oklch(0.90 0.06 259);
   --destructive: oklch(0.70 0.19 22);
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.70 0.142 258);
+  /* Tinted rather than plain white: a neutral hairline over a navy surface reads grey. */
+  --border: oklch(0.75 0.05 264 / 13%);
+  --input: oklch(0.75 0.05 264 / 18%);
+  --ring: oklch(0.66 0.19 262);
 
-  --chart-1: oklch(0.70 0.142 258);
+  --chart-1: oklch(0.66 0.19 262);
   --chart-2: oklch(0.74 0.14 45);
-  --chart-3: oklch(0.72 0.13 165);
-  --chart-4: oklch(0.68 0.15 300);
+  --chart-3: oklch(0.72 0.14 165);
+  --chart-4: oklch(0.70 0.16 300);
   --chart-5: oklch(0.72 0.15 20);
 
-  --sidebar: oklch(0.195 0.015 262);
-  --sidebar-foreground: oklch(0.968 0.004 255);
-  --sidebar-primary: oklch(0.70 0.142 258);
-  --sidebar-primary-foreground: oklch(0.17 0.04 262);
-  --sidebar-accent: oklch(0.305 0.045 261);
-  --sidebar-accent-foreground: oklch(0.90 0.05 259);
-  --sidebar-border: oklch(1 0 0 / 9%);
-  --sidebar-ring: oklch(0.70 0.142 258);
+  --sidebar: oklch(0.165 0.032 264);
+  --sidebar-foreground: oklch(0.968 0.006 258);
+  --sidebar-primary: oklch(0.57 0.205 262);
+  --sidebar-primary-foreground: oklch(0.99 0.004 255);
+  --sidebar-accent: oklch(0.31 0.06 262);
+  --sidebar-accent-foreground: oklch(0.90 0.06 259);
+  --sidebar-border: oklch(0.75 0.05 264 / 13%);
+  --sidebar-ring: oklch(0.66 0.19 262);
 }
 
 @layer base {
@@ -164,6 +170,22 @@
     /* Thai stacks vowels and tone marks above and below the character, which clip at
        Tailwind's default leading. */
     line-height: 1.7;
+  }
+}
+
+/**
+ * Registered so it can be animated: a bare custom property is a string as far as the engine
+ * is concerned, and a string has no halfway point between 0deg and 360deg to interpolate to.
+ */
+@property --spin {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes spotlight-spin {
+  to {
+    --spin: 360deg;
   }
 }
 
@@ -189,12 +211,159 @@
       );
   }
 
+  /* Dark mode starts from a much darker card, so the same mix percentages land as a faint
+     smudge instead of light. Scoped here rather than raised in the base rule, which also
+     renders over a near-white card where these values would blow out.
+     Three sources, not two: the blue reads as the light itself, the violet keeps the
+     right-hand half from going flat behind the figures, and the teal stops the two from
+     meeting in a dead band across the middle. */
+  .dark .surface-aurora {
+    background-image:
+      radial-gradient(
+        ellipse 70% 110% at 4% -18%,
+        color-mix(in oklab, var(--primary) 52%, transparent),
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 60% 120% at 82% 8%,
+        color-mix(in oklab, var(--chart-4) 20%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 90% 80% at 55% 120%,
+        color-mix(in oklab, var(--chart-3) 14%, transparent),
+        transparent 62%
+      );
+  }
+
+  /**
+   * The filled brand surface: the call to action, and nothing else.
+   *
+   * A flat fill at this size reads as a coloured rectangle; the ramp gives the pill a lit
+   * top edge, which is the same lighting story the aurora behind it tells.
+   */
+  .brand-gradient {
+    background-image: linear-gradient(
+      100deg,
+      color-mix(in oklab, var(--primary), black 10%),
+      color-mix(in oklab, var(--primary), white 16%)
+    );
+  }
+
+  /**
+   * A stat's icon chip. The colour arrives as `--tile` from the call site, so the three
+   * chips differ by one inline custom property rather than three near-identical classes.
+   *
+   * Darkened rather than used neat: the chart tokens are tuned to be read *as* marks against
+   * a surface, and a white glyph sitting on one of them at full lightness disappears.
+   */
+  .icon-tile {
+    background-image: linear-gradient(
+      145deg,
+      color-mix(in oklab, var(--tile), white 8%),
+      color-mix(in oklab, var(--tile), black 22%)
+    );
+    color: oklch(0.99 0.004 255);
+    box-shadow: inset 0 1px 0 0 color-mix(in oklab, white 32%, transparent);
+  }
+
+  /**
+   * The headline ramp: near-foreground at the start, brand blue by the end.
+   *
+   * `padding-block` is not decoration. `background-clip: text` paints only where the
+   * element's own box overlaps a glyph, and Thai stacks vowels and tone marks well above
+   * the em box — without the room, สระ and วรรณยุกต์ are silently clipped away.
+   */
+  .text-brand-gradient {
+    background-image: linear-gradient(
+      104deg,
+      var(--foreground) 0%,
+      var(--foreground) 8%,
+      var(--primary) 52%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    padding-block: 0.12em;
+  }
+
+  /* The light end of the ramp has to lift off a navy card, not sit on white paper. */
+  .dark .text-brand-gradient {
+    background-image: linear-gradient(
+      104deg,
+      var(--foreground) 0%,
+      var(--foreground) 8%,
+      color-mix(in oklab, var(--chart-1), white 10%) 54%
+    );
+  }
+
   /* A single hairline of light along the top edge, the way a real raised surface catches it. */
   .edge-highlight {
     box-shadow: inset 0 1px 0 0 color-mix(in oklab, white 55%, transparent);
   }
   .dark .edge-highlight {
     box-shadow: inset 0 1px 0 0 color-mix(in oklab, white 8%, transparent);
+  }
+
+  /**
+   * A gradient hairline that follows the pointer around a card's edge.
+   *
+   * The frame is one element, not four: the layer covers the whole card, `padding: 1px` marks
+   * off a one-pixel rim, and the mask pair — one over the padding box, one over the border box,
+   * composited to exclude — erases everything but that rim. The gradient is therefore painted
+   * across the entire card and only the edge of it survives, which is what lets a single radial
+   * highlight travel around all four sides instead of stopping at a corner.
+   *
+   * Two gradients stacked: the radial reads as the pointer's own light, the conic keeps the
+   * rest of the rim alive so the far side of the card is not simply dark. `--mx`/`--my` arrive
+   * from `trackSpotlight`; the fallback centres the highlight for anyone who never moves a
+   * pointer at all — touch, keyboard, a screenshot.
+   *
+   * The rotation runs only while hovered. A card grid puts a dozen of these on screen at once,
+   * and a dozen elements animating forever is a real cost paid for something nobody is looking
+   * at.
+   */
+  .spotlight-border {
+    position: relative;
+  }
+
+  .spotlight-border::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    padding: 1px;
+    background:
+      radial-gradient(
+        16rem circle at var(--mx, 50%) var(--my, 0%),
+        color-mix(in oklab, var(--chart-1), transparent 10%),
+        transparent 60%
+      ),
+      conic-gradient(
+        from var(--spin),
+        transparent 0deg,
+        color-mix(in oklab, var(--chart-4), transparent 55%) 80deg,
+        transparent 190deg,
+        color-mix(in oklab, var(--chart-3), transparent 60%) 290deg,
+        transparent 360deg
+      );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 300ms ease;
+    pointer-events: none;
+  }
+
+  .spotlight-border:hover::after {
+    opacity: 1;
+    animation: spotlight-spin 6s linear infinite;
   }
 
   /* Tabular figures for anything a reader scans down a column: salaries, counts, dates. */

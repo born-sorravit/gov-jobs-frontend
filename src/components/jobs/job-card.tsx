@@ -2,6 +2,7 @@
 
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { HoverLift } from "@/components/motion/reveal";
+import { trackSpotlight } from "@/components/motion/spotlight";
 import { SaveJobButton } from "@/components/jobs/save-job-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -55,12 +56,13 @@ export function JobCard({ job, provinces, educationLevels, jobTypes }: JobCardPr
 
 	return (
 		<HoverLift className="relative">
-			<Card className="group relative h-full gap-0 overflow-hidden py-0 shadow-sm transition-[box-shadow,border-color] duration-300 hover:border-primary/30 hover:shadow-lg">
-				{/* Reads as light catching the top edge as the card lifts, not as a coloured bar. */}
-				<span
-					aria-hidden
-					className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-				/>
+			<Card
+				onPointerMove={trackSpotlight}
+				className="spotlight-border group relative h-full gap-0 overflow-hidden py-0 shadow-sm transition-shadow duration-300 hover:shadow-lg"
+			>
+				{/* The lit top edge this used to draw is now the whole rim's job — `spotlight-border`
+				    above. Kept as one fixed hairline it pinned the light to the top of the card while
+				    the rest of the edge followed the pointer, which read as two effects disagreeing. */}
 				<CardContent className="flex h-full flex-col gap-4 p-5">
 					<div className="flex items-start justify-between gap-3">
 						<Link

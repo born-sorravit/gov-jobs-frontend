@@ -15,6 +15,13 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { LogOut, UserRound } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+/**
+ * The account in the header.
+ *
+ * Signed out it shows at every width: the sidebar has no identity to display then, and two
+ * ways in — one at the top right, one stacked in the bottom-left corner — is one too many.
+ * Signed in it steps aside from `lg` up and lets the sidebar's account card do the job.
+ */
 export function AccountMenu() {
 	const { user, isLoading, signOut } = useSession();
 	const t = useTranslations("auth");
@@ -43,7 +50,7 @@ export function AccountMenu() {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="icon" aria-label={t("account")}>
+				<Button variant="ghost" size="icon" className="lg:hidden" aria-label={t("account")}>
 					<span className="flex size-7 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
 						{initial}
 					</span>

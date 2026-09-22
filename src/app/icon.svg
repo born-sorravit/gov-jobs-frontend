@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="ศูนย์รวมงานราชการ">
+	<rect width="32" height="32" rx="7" fill="#225FC2"/>
+	<g fill="#FAFCFE">
+		<path d="M16 5.2 27.6 13H4.4Z"/>
+		<rect x="7.8" y="15" width="3.6" height="8.6" rx="0.6"/>
+		<rect x="14.2" y="15" width="3.6" height="8.6" rx="0.6"/>
+		<rect x="20.6" y="15" width="3.6" height="8.6" rx="0.6"/>
+		<rect x="4.4" y="24.2" width="23.2" height="3.2" rx="1.2"/>
+	</g>
+</svg>
