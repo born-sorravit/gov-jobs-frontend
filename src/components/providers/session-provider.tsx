@@ -7,6 +7,7 @@ interface SessionValue {
 	user: AuthUser | null;
 	isLoading: boolean;
 	refresh: () => Promise<void>;
+	reload: () => Promise<void>;
 	signOut: () => Promise<void>;
 }
 
@@ -41,13 +42,29 @@ export function SessionProvider({
 		}
 	}, []);
 
+	/**
+	 * Re-reads the account without touching the session.
+	 *
+	 * `refresh()` rotates the refresh token, which is the wrong tool for "the name changed" —
+	 * this just asks who is signed in.
+	 */
+	const reload = useCallback(async () => {
+		try {
+			const response = await fetch("/api/auth/session");
+			const payload = (await response.json().catch(() => null)) as { user?: AuthUser } | null;
+			if (response.ok) setUser(payload?.user ?? null);
+		} catch {
+			// Leave the last known user in place: a failed read is not a sign-out.
+		}
+	}, []);
+
 	const signOut = useCallback(async () => {
 		await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
 		setUser(null);
 	}, []);
 
 	return (
-		<SessionContext.Provider value={{ user, isLoading, refresh, signOut }}>
+		<SessionContext.Provider value={{ user, isLoading, refresh, reload, signOut }}>
 			{children}
 		</SessionContext.Provider>
 	);

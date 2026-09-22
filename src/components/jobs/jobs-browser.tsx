@@ -1,13 +1,22 @@
 "use client";
 
 import { ActiveFilterChips } from "@/components/jobs/active-filter-chips";
+import { Segmented } from "@/components/common/segmented";
 import { JobCard } from "@/components/jobs/job-card";
 import { JobGridSkeleton } from "@/components/jobs/job-card-skeleton";
+import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { JobSearchBar } from "@/components/jobs/job-search-bar";
 import { JobsEmptyState } from "@/components/jobs/jobs-empty-state";
 import { JobsPagination } from "@/components/jobs/jobs-pagination";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { useJobs, useReference } from "@/hooks/use-jobs";
 import { useRouter } from "@/i18n/navigation";
 import { JOB_STATUSES, buildJobsSearchParams, hasActiveFilters, parseJobsSearchParams } from "@/lib/jobs-query";
@@ -66,35 +75,30 @@ export function JobsBrowser({ initialData, initialKey, initialReference }: JobsB
 		<div className="space-y-6">
 			<JobSearchBar query={query} reference={reference} onSubmit={update} />
 
-			<div className="flex flex-wrap items-center justify-between gap-3">
-				<ActiveFilterChips
-					query={query}
-					reference={reference}
-					onChange={update}
-					onClearAll={() => router.push("/jobs", { scroll: false })}
-				/>
-			</div>
+			{/*
+			 * No wrapper here on purpose. This used to sit in a flex row, and because
+			 * `ActiveFilterChips` returns null when nothing is filtered, the empty row still
+			 * collected a `space-y-6` gap above and below it — 48px of nothing between the
+			 * search bar and the results on the default, unfiltered view. The component owns
+			 * its own row now, so returning null removes the layout with it.
+			 */}
+			<ActiveFilterChips
+				query={query}
+				reference={reference}
+				onChange={update}
+				onClearAll={() => router.push("/jobs", { scroll: false })}
+			/>
 
 			<div className="flex flex-wrap items-center justify-between gap-3">
-				<div className="flex flex-wrap items-center gap-2">
-					<Button
-						variant={query.status ? "outline" : "secondary"}
-						size="sm"
-						onClick={() => update({ status: undefined })}
-					>
-						{tJobs("allStatuses")}
-					</Button>
-					{JOB_STATUSES.map((status) => (
-						<Button
-							key={status}
-							variant={query.status === status ? "secondary" : "outline"}
-							size="sm"
-							onClick={() => update({ status })}
-						>
-							{tStatus(status)}
-						</Button>
-					))}
-				</div>
+				<Segmented
+					label={tJobs("sortBy")}
+					value={query.status ?? "ALL"}
+					onChange={(next) => update({ status: next === "ALL" ? undefined : next })}
+					options={[
+						{ value: "ALL" as const, label: tJobs("allStatuses") },
+						...JOB_STATUSES.map((status) => ({ value: status, label: tStatus(status) })),
+					]}
+				/>
 
 				<div className="flex items-center gap-3">
 					{data ? (
@@ -102,20 +106,29 @@ export function JobsBrowser({ initialData, initialKey, initialReference }: JobsB
 							{tJobs("resultCount", { count: data.meta.total })}
 						</span>
 					) : null}
-					<select
+					{/*
+					 * The one native control left on a page built from Radix primitives: it drew the
+					 * OS dropdown, ignored the border radius and the dark palette, and sat a pixel
+					 * off the segmented control beside it. Same value shape as before — one
+					 * `sortBy:order` string — so the parsing is unchanged.
+					 */}
+					<Select
 						value={`${query.sortBy ?? "publishedAt"}:${query.order ?? "DESC"}`}
-						onChange={(event) => {
-							const [sortBy, order] = event.target.value.split(":");
+						onValueChange={(next) => {
+							const [sortBy, order] = next.split(":");
 							update({ sortBy: sortBy as JobsQuery["sortBy"], order: order as "ASC" | "DESC" });
 						}}
-						aria-label={tJobs("sortBy")}
-						className="h-9 rounded-md border bg-card px-3 text-sm"
 					>
-						<option value="publishedAt:DESC">{tJobs("sortNewest")}</option>
-						<option value="applicationEnd:ASC">{tJobs("sortClosingSoon")}</option>
-						<option value="salaryMax:DESC">{tJobs("sortSalaryHigh")}</option>
-						<option value="title:ASC">{tJobs("sortTitle")}</option>
-					</select>
+						<SelectTrigger aria-label={tJobs("sortBy")} className="bg-card">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent align="end">
+							<SelectItem value="publishedAt:DESC">{tJobs("sortNewest")}</SelectItem>
+							<SelectItem value="applicationEnd:ASC">{tJobs("sortClosingSoon")}</SelectItem>
+							<SelectItem value="salaryMax:DESC">{tJobs("sortSalaryHigh")}</SelectItem>
+							<SelectItem value="title:ASC">{tJobs("sortTitle")}</SelectItem>
+						</SelectContent>
+					</Select>
 				</div>
 			</div>
 
@@ -141,7 +154,15 @@ export function JobsBrowser({ initialData, initialKey, initialReference }: JobsB
 				<>
 					{/* keepPreviousData leaves the old page up while the next loads; dimming is the
 					    only cue that something is in flight. */}
-					<div
+					{/*
+					 * Keyed on the page so a page change replays the entrance. Without the key the
+					 * grid keeps the same DOM nodes and the new results simply appear, which reads
+					 * as nothing having happened.
+					 */}
+					<Stagger
+						key={data.meta.page}
+						gap={0.04}
+						trigger="mount"
 						className={
 							isFetching
 								? "grid gap-4 opacity-60 transition-opacity sm:grid-cols-2 xl:grid-cols-3"
@@ -149,11 +170,11 @@ export function JobsBrowser({ initialData, initialKey, initialReference }: JobsB
 						}
 					>
 						{data.data.map((job) => (
-							<div key={job.id} className="relative">
+							<StaggerItem key={job.id} className="relative">
 								<JobCard job={job} {...lookups} />
-							</div>
+							</StaggerItem>
 						))}
-					</div>
+					</Stagger>
 
 					<JobsPagination meta={data.meta} onPageChange={(page) => update({ page })} />
 				</>

@@ -26,7 +26,6 @@ interface MultiSelectFilterProps {
 	onChange: (next: number[]) => void;
 	className?: string;
 	/** Rendered inside the popover under the list — used for the nationwide toggle. */
-	footer?: React.ReactNode;
 }
 
 /**
@@ -41,7 +40,6 @@ export function MultiSelectFilter({
 	selected,
 	onChange,
 	className,
-	footer,
 }: MultiSelectFilterProps) {
 	const locale = useLocale() as Locale;
 	const t = useTranslations("common");
@@ -111,7 +109,6 @@ export function MultiSelectFilter({
 					</CommandList>
 				</Command>
 
-				{footer ? <div className="border-t p-3">{footer}</div> : null}
 
 				{selected.length > 0 ? (
 					<div className="border-t p-2">

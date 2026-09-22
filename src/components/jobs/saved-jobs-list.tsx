@@ -3,6 +3,7 @@
 import { JobCard } from "@/components/jobs/job-card";
 import { JobGridSkeleton } from "@/components/jobs/job-card-skeleton";
 import { JobsPagination } from "@/components/jobs/jobs-pagination";
+import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useReference } from "@/hooks/use-jobs";
@@ -74,13 +75,13 @@ export function SavedJobsList({ initialReference }: { initialReference?: Referen
 
 	return (
 		<>
-			<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+			<Stagger key={page} gap={0.04} trigger="mount" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 				{data.data.map((job) => (
-					<div key={job.id} className="relative">
+					<StaggerItem key={job.id} className="relative">
 						<JobCard job={job} {...lookups} />
-					</div>
+					</StaggerItem>
 				))}
-			</div>
+			</Stagger>
 			<JobsPagination meta={data.meta} onPageChange={setPage} />
 		</>
 	);

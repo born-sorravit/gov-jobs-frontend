@@ -56,7 +56,7 @@ export function AccountMenu() {
 				</DropdownMenuLabel>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem asChild>
-					<Link href="/dashboard">
+					<Link href="/account">
 						<UserRound className="size-4" />
 						{t("account")}
 					</Link>

@@ -12,6 +12,25 @@ export const JOB_SORT_KEYS = [
 
 export const JOB_STATUSES: JobStatus[] = ["OPEN", "UPCOMING", "CLOSED"];
 
+/**
+ * The salary filter is always one of these, never a free range — the UI offers a fixed set of
+ * bands. Both the search bar that sets one and the chip row that displays it read this list,
+ * so a chip can name the band the reader actually picked instead of reconstructing a range
+ * from its bounds (which printed "––15,000" for the open-ended first band).
+ */
+export const SALARY_BANDS = [
+	{ id: 1, min: undefined, max: 15_000 },
+	{ id: 2, min: 15_000, max: 25_000 },
+	{ id: 3, min: 25_000, max: 40_000 },
+	{ id: 4, min: 40_000, max: undefined },
+] as const;
+
+export type SalaryBandId = (typeof SALARY_BANDS)[number]["id"];
+
+/** The band matching an exact min/max pair, or undefined if the query carries something else. */
+export const findSalaryBand = (min: number | undefined, max: number | undefined) =>
+	SALARY_BANDS.find((band) => band.min === min && band.max === max);
+
 export const DEFAULT_PAGE_SIZE = 12;
 export const MAX_PAGE_SIZE = 100;
 

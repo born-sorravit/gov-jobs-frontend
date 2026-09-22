@@ -2,6 +2,9 @@ import type { AlertFrequency, JobAlert, Paginated } from "@/types/api";
 
 const PROXY = "/api/backend";
 
+/** Shared so the alerts page and the dashboard read the same cache entry. */
+export const ALERTS_KEY = ["job-alerts"] as const;
+
 export interface JobAlertInput {
 	name: string;
 	keywords: string[];

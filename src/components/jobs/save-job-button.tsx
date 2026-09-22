@@ -12,8 +12,12 @@ import { toast } from "sonner";
 
 interface SaveJobButtonProps {
 	jobId: string;
-	/** `icon` sits on a card; `full` is the wide button on the detail page. */
-	variant?: "icon" | "full";
+	/**
+	 * `icon` sits on a card; `quiet` is the wide, borderless button in the detail rail, where
+	 * saving sits below the two actions that actually leave the site and must not compete
+	 * with them for weight.
+	 */
+	variant?: "icon" | "quiet";
 	className?: string;
 }
 
@@ -46,13 +50,20 @@ export function SaveJobButton({ jobId, variant = "icon", className }: SaveJobBut
 		);
 	};
 
-	if (variant === "full") {
+	if (variant === "quiet") {
 		return (
 			<Button
 				type="button"
-				variant={saved ? "secondary" : "outline"}
+				variant={saved ? "secondary" : "ghost"}
 				onClick={onClick}
-				className={cn("w-full", className)}
+				aria-pressed={saved}
+				className={cn(
+					// Left-aligned so this and "create alert" read as a short list of extras rather
+					// than as two more buttons of equal standing.
+					"w-full justify-start",
+					saved && "text-primary",
+					className
+				)}
 			>
 				{saved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
 				{label}

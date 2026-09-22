@@ -60,7 +60,7 @@ export default async function CreateAlertPage({
 		<AppShell title={t("create")}>
 			<div className="mx-auto w-full max-w-3xl space-y-6">
 				<div className="space-y-1">
-					<h2 className="font-semibold text-2xl tracking-tight">{t("create")}</h2>
+					<h1 className="font-semibold text-2xl tracking-tight">{t("create")}</h1>
 					<p className="text-muted-foreground">{t("createSubtitle")}</p>
 				</div>
 

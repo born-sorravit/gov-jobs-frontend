@@ -1,5 +1,8 @@
 "use client";
 
+import { RunHistoryStrip } from "@/components/admin/run-history-strip";
+import { StatTile } from "@/components/common/stat-tile";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +20,19 @@ import {
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import {
+	AlertTriangle,
+	Bell,
+	CheckCircle2,
+	Clock,
+	FileText,
+	MailCheck,
+	MailWarning,
+	MailX,
+	Sparkles,
+	Users,
+	Zap,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 const dateTime = (value: string | null, locale: Locale): string => {
@@ -28,25 +43,6 @@ const dateTime = (value: string | null, locale: Locale): string => {
 		timeZone: "Asia/Bangkok",
 	}).format(new Date(value));
 };
-
-function Stat({ label, value, tone }: { label: string; value: number; tone?: "warn" | "bad" }) {
-	return (
-		<Card>
-			<CardContent className="space-y-1 py-4">
-				<p className="text-muted-foreground text-xs">{label}</p>
-				<p
-					className={cn(
-						"font-semibold text-2xl tabular-nums",
-						tone === "warn" && value > 0 && "text-amber-600 dark:text-amber-400",
-						tone === "bad" && value > 0 && "text-destructive"
-					)}
-				>
-					{value.toLocaleString()}
-				</p>
-			</CardContent>
-		</Card>
-	);
-}
 
 function RunStatus({ run }: { run: CrawlerRun }) {
 	const t = useTranslations("admin");
@@ -85,7 +81,10 @@ function DataTable({ head, rows }: { head: string[]; rows: React.ReactNode[][] }
 				<thead>
 					<tr className="border-b text-left">
 						{head.map((label) => (
-							<th key={label} className="whitespace-nowrap px-3 py-2 font-medium text-muted-foreground text-xs">
+							<th
+								key={label}
+								className="whitespace-nowrap px-3 py-2.5 font-medium text-muted-foreground text-xs"
+							>
 								{label}
 							</th>
 						))}
@@ -93,9 +92,12 @@ function DataTable({ head, rows }: { head: string[]; rows: React.ReactNode[][] }
 				</thead>
 				<tbody>
 					{rows.map((row, index) => (
-						<tr key={index} className="border-b last:border-0">
+						<tr
+							key={index}
+							className="border-b transition-colors last:border-0 hover:bg-muted/40"
+						>
 							{row.map((cell, cellIndex) => (
-								<td key={cellIndex} className="px-3 py-2.5 align-top">
+								<td key={cellIndex} className="numeric px-3 py-2.5 align-top">
 									{cell}
 								</td>
 							))}
@@ -119,78 +121,125 @@ export function AdminDashboard() {
 
 	if (overview.isPending) {
 		return (
-			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-				{Array.from({ length: 8 }, (_, index) => (
-					<Skeleton key={index} className="h-20 rounded-xl" />
-				))}
+			<div className="space-y-6">
+				<Skeleton className="h-44 rounded-xl" />
+				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+					{Array.from({ length: 8 }, (_, index) => (
+						<Skeleton key={index} className="h-20 rounded-xl" />
+					))}
+				</div>
 			</div>
 		);
 	}
 
 	const data = overview.data;
 	const last = data?.lastCrawlerRun;
+	const failing = Boolean(data && data.consecutiveFailures > 0);
 
 	return (
 		<div className="space-y-6">
 			{/* Crawler health first: everything else on this page depends on it running. */}
-			<Card className={data && data.consecutiveFailures > 0 ? "border-destructive/50" : undefined}>
-				<CardContent className="space-y-3">
-					<div className="flex flex-wrap items-center justify-between gap-3">
-						<h3 className="font-medium">{t("crawlerHealth")}</h3>
-						{last ? <RunStatus run={last} /> : null}
-					</div>
-
-					{last ? (
-						<div className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-							<div>
-								<span className="text-muted-foreground text-xs">{t("lastRun")}</span>
-								<p>{dateTime(last.startedAt, locale)}</p>
-							</div>
-							<div>
-								<span className="text-muted-foreground text-xs">{t("found")}</span>
-								<p className="tabular-nums">
-									{last.totalFound} · +{last.newJobs} / ~{last.updatedJobs}
-								</p>
-							</div>
-							<div>
-								<span className="text-muted-foreground text-xs">{t("duration")}</span>
-								<p className="tabular-nums">
-									{last.durationSeconds === null ? "—" : `${last.durationSeconds}s`}
-								</p>
-							</div>
-							<div>
-								<span className="text-muted-foreground text-xs">{t("trigger")}</span>
-								<p>{last.trigger}</p>
-							</div>
-						</div>
-					) : (
-						<p className="text-muted-foreground text-sm">{t("noRuns")}</p>
+			<Reveal>
+				<Card
+					className={cn(
+						"overflow-hidden shadow-sm",
+						failing ? "border-destructive/50" : "surface-aurora edge-highlight"
 					)}
+				>
+					<CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center">
+						<div className="space-y-4">
+							<div className="flex flex-wrap items-center justify-between gap-3">
+								<h2 className="font-medium">{t("crawlerHealth")}</h2>
+								{last ? <RunStatus run={last} /> : null}
+							</div>
 
-					{last?.errorMessage ? (
-						<p className="rounded-lg bg-destructive/10 px-3 py-2 font-mono text-destructive text-xs">
-							{last.errorMessage}
-						</p>
-					) : null}
+							{last ? (
+								<div className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+									<div>
+										<span className="text-muted-foreground text-xs">{t("lastRun")}</span>
+										<p>{dateTime(last.startedAt, locale)}</p>
+									</div>
+									<div>
+										<span className="text-muted-foreground text-xs">{t("found")}</span>
+										<p className="numeric">
+											{last.totalFound} · +{last.newJobs} / ~{last.updatedJobs}
+										</p>
+									</div>
+									<div>
+										<span className="text-muted-foreground text-xs">{t("duration")}</span>
+										<p className="numeric">
+											{last.durationSeconds === null ? "—" : `${last.durationSeconds}s`}
+										</p>
+									</div>
+									<div>
+										<span className="text-muted-foreground text-xs">{t("trigger")}</span>
+										<p>{last.trigger}</p>
+									</div>
+								</div>
+							) : (
+								<p className="text-muted-foreground text-sm">{t("noRuns")}</p>
+							)}
 
-					{data && data.consecutiveFailures > 1 ? (
-						<p className="text-destructive text-sm">
-							{t("consecutiveFailures", { count: data.consecutiveFailures })}
-						</p>
-					) : null}
-				</CardContent>
-			</Card>
+							{last?.errorMessage ? (
+								<p className="rounded-lg bg-destructive/10 px-3 py-2 font-mono text-destructive text-xs">
+									{last.errorMessage}
+								</p>
+							) : null}
 
-			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-				<Stat label={t("jobs")} value={data?.jobs ?? 0} />
-				<Stat label={t("openJobs")} value={data?.openJobs ?? 0} />
-				<Stat label={t("users")} value={data?.users ?? 0} />
-				<Stat label={t("alerts")} value={data?.alerts ?? 0} />
-				<Stat label={t("alertMatches")} value={data?.alertMatches ?? 0} />
-				<Stat label={t("pendingNotifications")} value={data?.pendingNotifications ?? 0} tone="warn" />
-				<Stat label={t("emailsSent")} value={data?.emailsSent ?? 0} />
-				<Stat label={t("emailsFailed")} value={data?.emailsFailed ?? 0} tone="bad" />
-			</div>
+							{data && data.consecutiveFailures > 1 ? (
+								<p className="flex items-center gap-2 font-medium text-destructive text-sm">
+									<AlertTriangle className="size-4 shrink-0" />
+									{t("consecutiveFailures", { count: data.consecutiveFailures })}
+								</p>
+							) : null}
+						</div>
+
+						{/* The shape of the last twenty runs, which the table below cannot show. */}
+						<div className="space-y-2 rounded-xl border bg-card/60 p-4 backdrop-blur-sm">
+							<div className="flex items-baseline justify-between gap-3">
+								<span className="font-medium text-xs">{t("runHistory")}</span>
+								<span className="text-muted-foreground text-xs">{t("runHistoryHint")}</span>
+							</div>
+							{runs.isPending ? (
+								<Skeleton className="h-12 w-full" />
+							) : (
+								<RunHistoryStrip
+									runs={runs.data?.data ?? []}
+									label={(run) =>
+										`${dateTime(run.startedAt, locale)} · ${t(`status${run.status}` as "statusSUCCESS")} · ${run.totalFound}`
+									}
+								/>
+							)}
+						</div>
+					</CardContent>
+				</Card>
+			</Reveal>
+
+			<Stagger trigger="mount" gap={0.04} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+				{(
+					[
+						[FileText, t("jobs"), data?.jobs, "default"],
+						[Zap, t("openJobs"), data?.openJobs, "good"],
+						[Users, t("users"), data?.users, "default"],
+						[Bell, t("alerts"), data?.alerts, "default"],
+						[Sparkles, t("alertMatches"), data?.alertMatches, "default"],
+						[MailWarning, t("pendingNotifications"), data?.pendingNotifications, "warn"],
+						[MailCheck, t("emailsSent"), data?.emailsSent, "default"],
+						[MailX, t("emailsFailed"), data?.emailsFailed, "bad"],
+					] as const
+				).map(([icon, label, value, tone]) => (
+					<StaggerItem key={label}>
+						<StatTile
+							icon={icon}
+							label={label}
+							value={value}
+							tone={tone}
+							// "0 failed" and "0 awaiting" are good news; only colour them once they are not.
+							toneWhenPositive={tone === "warn" || tone === "bad"}
+						/>
+					</StaggerItem>
+				))}
+			</Stagger>
 
 			<Tabs defaultValue="runs">
 				<TabsList>

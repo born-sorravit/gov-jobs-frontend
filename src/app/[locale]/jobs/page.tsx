@@ -49,7 +49,7 @@ export default async function JobsPage({
 		<AppShell title={t("title")}>
 			<div className="mx-auto w-full max-w-7xl space-y-6">
 				<div className="space-y-1">
-					<h2 className="font-semibold text-2xl tracking-tight">{t("title")}</h2>
+					<h1 className="font-semibold text-2xl tracking-tight">{t("title")}</h1>
 					<p className="text-muted-foreground">{t("subtitle")}</p>
 				</div>
 

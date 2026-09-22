@@ -4,6 +4,7 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/sonner";
 import type { AuthUser } from "@/types/api";
+import { MotionConfig } from "motion/react";
 import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
 
@@ -16,12 +17,19 @@ export function Providers({
 }) {
 	return (
 		<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-			<QueryProvider>
-				<SessionProvider initialUser={initialUser}>
-					{children}
-					<Toaster richColors position="top-right" />
-				</SessionProvider>
-			</QueryProvider>
+			{/*
+			 * One place decides how motion behaves for a reader who has asked for less of it.
+			 * "user" keeps every component's tree identical — so nothing mismatches on
+			 * hydration — and drops the transforms instead.
+			 */}
+			<MotionConfig reducedMotion="user">
+				<QueryProvider>
+					<SessionProvider initialUser={initialUser}>
+						{children}
+						<Toaster richColors position="top-right" />
+					</SessionProvider>
+				</QueryProvider>
+			</MotionConfig>
 		</ThemeProvider>
 	);
 }

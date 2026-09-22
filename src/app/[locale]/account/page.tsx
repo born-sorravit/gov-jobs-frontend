@@ -1,7 +1,7 @@
-import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { AccountSettings } from "@/components/account/account-settings";
 import { AppShell } from "@/components/layout/app-shell";
 import type { Locale } from "@/i18n/routing";
-import { requireAdmin } from "@/lib/auth/require-user";
+import { requireUser } from "@/lib/auth/require-user";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
@@ -11,30 +11,33 @@ export async function generateMetadata({
 	params: Promise<{ locale: Locale }>;
 }): Promise<Metadata> {
 	const { locale } = await params;
-	const t = await getTranslations({ locale, namespace: "admin" });
-	// Nothing here should ever be indexed.
+	const t = await getTranslations({ locale, namespace: "account" });
+	// Someone's own settings have no business in a search index.
 	return { title: t("title"), robots: { index: false, follow: false } };
 }
 
-export default async function AdminPage({ params }: { params: Promise<{ locale: Locale }> }) {
+export default async function AccountPage({
+	params,
+}: {
+	params: Promise<{ locale: Locale }>;
+}) {
 	const { locale } = await params;
 	setRequestLocale(locale);
 
-	// Signed out -> sign in; signed in without the role -> 404. The API re-reads the role
-	// from the database on every admin request, so this is the affordance, not the boundary.
-	await requireAdmin("/admin");
+	// Bounces to /login?next=/account and comes back here afterwards.
+	await requireUser("/account");
 
-	const t = await getTranslations("admin");
+	const t = await getTranslations("account");
 
 	return (
 		<AppShell title={t("title")}>
-			<div className="mx-auto w-full max-w-7xl space-y-6">
+			<div className="mx-auto w-full max-w-2xl space-y-6">
 				<div className="space-y-1">
 					<h1 className="font-semibold text-2xl tracking-tight">{t("title")}</h1>
 					<p className="text-muted-foreground">{t("subtitle")}</p>
 				</div>
 
-				<AdminDashboard />
+				<AccountSettings />
 			</div>
 		</AppShell>
 	);

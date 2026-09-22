@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 const TONE: Record<JobStatus, string> = {
 	OPEN: "border-emerald-600/25 bg-emerald-500/12 text-emerald-700 dark:text-emerald-300",
-	UPCOMING: "border-amber-600/25 bg-amber-500/12 text-amber-700 dark:text-amber-300",
+	UPCOMING: "border-amber-600/25 bg-amber-500/12 text-amber-800 dark:text-amber-300",
 	CLOSED: "border-border bg-muted text-muted-foreground",
 };
 

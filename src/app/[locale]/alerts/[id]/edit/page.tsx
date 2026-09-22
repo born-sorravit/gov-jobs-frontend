@@ -45,7 +45,7 @@ export default async function EditAlertPage({
 		<AppShell title={t("edit")}>
 			<div className="mx-auto w-full max-w-3xl space-y-6">
 				<div className="space-y-1">
-					<h2 className="font-semibold text-2xl tracking-tight">{t("edit")}</h2>
+					<h1 className="font-semibold text-2xl tracking-tight">{t("edit")}</h1>
 					<p className="text-muted-foreground">{alert.name}</p>
 				</div>
 

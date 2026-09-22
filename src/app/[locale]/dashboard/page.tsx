@@ -1,4 +1,4 @@
-import { SavedJobsList } from "@/components/jobs/saved-jobs-list";
+import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
 import { AppShell } from "@/components/layout/app-shell";
 import type { Locale } from "@/i18n/routing";
 import { fetchReference } from "@/lib/api/jobs";
@@ -13,18 +13,23 @@ export async function generateMetadata({
 	params: Promise<{ locale: Locale }>;
 }): Promise<Metadata> {
 	const { locale } = await params;
-	const t = await getTranslations({ locale, namespace: "savedPage" });
-	return { title: t("title") };
+	const t = await getTranslations({ locale, namespace: "dashboard" });
+	// Someone's own account page has no business in a search index.
+	return { title: t("title"), robots: { index: false, follow: false } };
 }
 
-export default async function SavedPage({ params }: { params: Promise<{ locale: Locale }> }) {
+export default async function DashboardPage({
+	params,
+}: {
+	params: Promise<{ locale: Locale }>;
+}) {
 	const { locale } = await params;
 	setRequestLocale(locale);
 
-	// Bounces to /login?next=/saved and comes back here afterwards.
-	await requireUser("/saved");
+	// Bounces to /login?next=/dashboard and comes back here afterwards.
+	await requireUser("/dashboard");
 
-	const t = await getTranslations("savedPage");
+	const t = await getTranslations("dashboard");
 
 	// Taxonomy labels are public, so they are fetched directly rather than through the proxy.
 	let reference: ReferenceCatalog | undefined;
@@ -42,7 +47,7 @@ export default async function SavedPage({ params }: { params: Promise<{ locale: 
 					<p className="text-muted-foreground">{t("subtitle")}</p>
 				</div>
 
-				<SavedJobsList initialReference={reference} />
+				<DashboardOverview initialReference={reference} />
 			</div>
 		</AppShell>
 	);

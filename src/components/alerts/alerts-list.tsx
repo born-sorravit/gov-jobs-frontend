@@ -7,7 +7,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { deleteJobAlert, fetchJobAlerts, setJobAlertActive } from "@/lib/api/job-alerts";
+import {
+	ALERTS_KEY,
+	deleteJobAlert,
+	fetchJobAlerts,
+	setJobAlertActive,
+} from "@/lib/api/job-alerts";
 import { formatDate, referenceLabel } from "@/lib/format";
 import { useReference } from "@/hooks/use-jobs";
 import type { JobAlert, ReferenceCatalog, ReferenceOption } from "@/types/api";
@@ -15,8 +20,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BellOff, BellRing, Pencil, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-
-const ALERTS_KEY = ["job-alerts"] as const;
 
 function CriteriaChips({
 	alert,
@@ -136,7 +139,7 @@ export function AlertsList({ initialReference }: { initialReference?: ReferenceC
 						<div className="flex flex-wrap items-start justify-between gap-3">
 							<div className="min-w-0 space-y-1">
 								<div className="flex flex-wrap items-center gap-2">
-									<h3 className="font-medium">{alert.name}</h3>
+									<h2 className="font-medium">{alert.name}</h2>
 									<Badge variant={alert.isActive ? "secondary" : "outline"}>
 										{alert.isActive ? t("active") : t("pausedLabel")}
 									</Badge>

@@ -60,11 +60,17 @@ export async function readTokens(): Promise<{ accessToken?: string; refreshToken
 /** Calls the API's auth endpoints. Server-side only — the browser never sees these. */
 export async function callAuth<T>(
 	path: string,
-	body: unknown
+	body: unknown,
+	// Only for the endpoints that both need a session *and* hand back new tokens, which is
+	// why they cannot go through the /api/backend proxy: it drops the response's cookies.
+	options: { method?: string; accessToken?: string } = {}
 ): Promise<{ ok: true; data: T } | { ok: false; status: number; message: string }> {
 	const response = await fetch(`${env.apiBaseUrl}/auth/${path}`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
+		method: options.method ?? "POST",
+		headers: {
+			"Content-Type": "application/json",
+			...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
+		},
 		body: JSON.stringify(body),
 		cache: "no-store",
 	});

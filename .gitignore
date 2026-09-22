@@ -42,3 +42,7 @@ next-env.d.ts
 
 # The template README tells you to copy — it must not be ignored by the .env* rule above
 !.env.example
+
+# AI
+.agents
+.claude

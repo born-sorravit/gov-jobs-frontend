@@ -1,6 +1,12 @@
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { SaveJobButton } from "@/components/jobs/save-job-button";
-import { JobFact, JobFactCard, JobTextSection } from "@/components/jobs/job-detail-sections";
+import {
+	AgencySeal,
+	JobBreadcrumb,
+	JobFact,
+	JobFactCard,
+	JobTextSection,
+} from "@/components/jobs/job-detail-sections";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,13 +16,11 @@ import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { ApiError } from "@/lib/api-client";
 import { fetchJob, fetchReference } from "@/lib/api/jobs";
-import { formatDate, formatSalaryRange, referenceLabel } from "@/lib/format";
+import { deadlineTone, formatDate, formatSalaryRange, referenceLabel } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { JobDetail, ReferenceCatalog, ReferenceOption } from "@/types/api";
 import {
-	ArrowLeft,
-	Banknote,
 	BellPlus,
-	Building2,
 	CalendarClock,
 	ClipboardList,
 	ExternalLink,
@@ -89,6 +93,8 @@ export default async function JobDetailPage({
 
 	const t = await getTranslations("job");
 	const tDetail = await getTranslations("jobDetail");
+	const tNav = await getTranslations("nav");
+	const tCommon = await getTranslations("common");
 
 	const job = await loadJob(id);
 	let reference: ReferenceCatalog | undefined;
@@ -118,32 +124,61 @@ export default async function JobDetailPage({
 	return (
 		<AppShell title={job.title}>
 			<div className="mx-auto w-full max-w-6xl space-y-6">
-				<Button asChild variant="ghost" size="sm" className="-ml-2">
-					<Link href="/jobs">
-						<ArrowLeft className="size-4" />
-						{tDetail("backToJobs")}
-					</Link>
-				</Button>
+				<JobBreadcrumb
+					label={tCommon("breadcrumb")}
+					home={tNav("home")}
+					jobs={tNav("jobs")}
+					current={job.title}
+				/>
 
-				<header className="space-y-4">
-					<div className="flex flex-wrap items-center gap-2">
-						<JobStatusBadge status={job.status} />
-						{jobCategory ? <Badge variant="secondary">{jobCategory}</Badge> : null}
-						{job.isNationwide ? <Badge variant="outline">{t("nationwide")}</Badge> : null}
-					</div>
+				{/*
+				 * The title block sits on a card like everything else on the page. Floating it bare
+				 * on the tinted background left the most important element as the only one with no
+				 * surface under it, which read as the page starting halfway down.
+				 */}
+				<Card>
+					<CardContent>
+						<header className="flex items-start gap-4">
+							{/* The seal is how a reader recognises the issuing agency at a glance, and it
+							    was already in the payload and already whitelisted in `next.config.ts`. */}
+							<AgencySeal src={job.agencySealUrl} className="size-11 sm:size-14" />
 
-					<h1 className="text-balance font-semibold text-2xl leading-tight tracking-tight lg:text-3xl">
-						{job.title}
-					</h1>
+							<div className="min-w-0 flex-1 space-y-3">
+								<div className="flex flex-wrap items-center gap-2">
+									<JobStatusBadge status={job.status} />
+									{jobCategory ? <Badge variant="secondary">{jobCategory}</Badge> : null}
+									{job.isNationwide ? <Badge variant="outline">{t("nationwide")}</Badge> : null}
+								</div>
 
-					<div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
-						<span className="inline-flex items-center gap-1.5">
-							<Building2 className="size-4 shrink-0" />
-							{job.agency}
-						</span>
-						{job.ministry ? <span className="text-sm">{job.ministry}</span> : null}
-					</div>
-				</header>
+								{/*
+								 * Thai stacks สระบน and วรรณยุกต์ above the character and สระล่าง below, so a
+								 * line of it inks taller than the Latin the default leading was scaled for.
+								 * Measured on a wrapping title at 24px: the ink box is 31px against
+								 * `leading-tight`'s 30px line box, so consecutive lines overlap by a pixel.
+								 * 1.35 gives 32.4px — clearance instead of collision, without the slack of
+								 * `leading-relaxed`, which at 39px would space a two-line title like prose.
+								 */}
+								<h1 className="text-balance font-semibold text-2xl leading-[1.35] tracking-tight lg:text-3xl">
+									{job.title}
+								</h1>
+
+								<div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground text-sm">
+									{/* No icon here: the seal beside it already says "agency", and two marks for
+									    one fact is one too many. */}
+									<span className="font-medium text-foreground">{job.agency}</span>
+									{job.ministry ? (
+										<>
+											<span aria-hidden className="text-muted-foreground/50">
+												·
+											</span>
+											<span>{job.ministry}</span>
+										</>
+									) : null}
+								</div>
+							</div>
+						</header>
+					</CardContent>
+				</Card>
 
 				<div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
 					<div className="min-w-0 space-y-6">
@@ -226,14 +261,28 @@ export default async function JobDetailPage({
 
 					<aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
 						<Card>
-							<CardContent className="space-y-4">
-								<div className="space-y-1">
+							<CardContent className="space-y-5">
+								<div className="space-y-2">
 									<p className="text-muted-foreground text-xs">{t("applicationPeriod")}</p>
-									<p className="font-medium">
+									<p className="numeric font-medium text-sm">
 										{formatDate(job.applicationStart, locale)} – {formatDate(job.applicationEnd, locale)}
 									</p>
+									{/*
+									 * The countdown decides whether anything else on this card matters, so it is
+									 * the one element here allowed to carry colour. Under a week it turns amber —
+									 * the same threshold and the same tone the cards in the list use, so a reader
+									 * who learned it there does not have to learn it twice.
+									 */}
 									{job.daysUntilDeadline !== null && job.daysUntilDeadline >= 0 ? (
-										<p className="text-muted-foreground text-sm">
+										<p
+											className={cn(
+												"inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-medium text-sm",
+												deadlineTone(job.daysUntilDeadline) === "urgent"
+													? "bg-amber-500/12 text-amber-800 dark:text-amber-300"
+													: "bg-muted text-muted-foreground"
+											)}
+										>
+											<CalendarClock className="size-3.5 shrink-0" />
 											{job.daysUntilDeadline === 0
 												? t("lastDay")
 												: t("daysLeft", { days: job.daysUntilDeadline })}
@@ -246,9 +295,11 @@ export default async function JobDetailPage({
 										<Separator />
 										<div className="space-y-1">
 											<p className="text-muted-foreground text-xs">{t("salary")}</p>
-											<p className="inline-flex items-center gap-1.5 font-medium">
-												<Banknote className="size-4 text-muted-foreground" />
-												{salary} <span className="font-normal text-xs">{t("salaryUnit")}</span>
+											<p className="inline-flex items-baseline gap-1.5">
+												<span className="numeric font-semibold text-lg tracking-tight">
+													{salary}
+												</span>
+												<span className="text-muted-foreground text-xs">{t("salaryUnit")}</span>
 											</p>
 										</div>
 									</>
@@ -257,23 +308,17 @@ export default async function JobDetailPage({
 								<Separator />
 
 								{/*
-								 * The original announcement is the primary action, not the apply link.
-								 * This site is an index of public announcements; a user must always be able
-								 * to reach the source and verify what we are showing them.
+								 * Four buttons of near-equal weight is not a choice, it is a wall — the reader
+								 * has to read all four to find the one they want. So: one filled primary, one
+								 * outlined secondary, and the two that only change state on this site demoted
+								 * below a rule.
+								 *
+								 * The original announcement stays the primary action, not the apply link. This
+								 * site is an index of public announcements; a user must always be able to reach
+								 * the source and verify what we are showing them.
 								 */}
-								<div className="grid gap-2">
-									<SaveJobButton jobId={job.id} variant="full" />
-
-									{/* Pre-fills the new alert from this announcement, so "tell me about jobs
-									    like this" is one click plus one edit. */}
-									<Button asChild variant="outline">
-										<Link href={`/alerts/create?fromJob=${job.id}`}>
-											<BellPlus className="size-4" />
-											{t("createAlert")}
-										</Link>
-									</Button>
-
-									<Button asChild>
+								<div className="space-y-2">
+									<Button asChild size="lg" className="w-full">
 										<a href={job.sourceUrl} target="_blank" rel="noopener noreferrer">
 											<FileText className="size-4" />
 											{t("viewSource")}
@@ -281,13 +326,26 @@ export default async function JobDetailPage({
 									</Button>
 
 									{job.applyUrl ? (
-										<Button asChild variant="outline">
+										<Button asChild variant="outline" className="w-full">
 											<a href={job.applyUrl} target="_blank" rel="noopener noreferrer">
 												<ExternalLink className="size-4" />
 												{t("applyNow")}
 											</a>
 										</Button>
 									) : null}
+
+									<Separator className="my-3" />
+
+									<SaveJobButton jobId={job.id} variant="quiet" />
+
+									{/* Pre-fills the new alert from this announcement, so "tell me about jobs
+									    like this" is one click plus one edit. */}
+									<Button asChild variant="ghost" className="w-full justify-start">
+										<Link href={`/alerts/create?fromJob=${job.id}`}>
+											<BellPlus className="size-4" />
+											{t("createAlert")}
+										</Link>
+									</Button>
 								</div>
 							</CardContent>
 						</Card>
@@ -315,19 +373,22 @@ export default async function JobDetailPage({
 							</Card>
 						) : null}
 
-						<Card>
-							<CardContent className="space-y-2 text-muted-foreground text-xs">
-								<p className="inline-flex items-center gap-1.5">
-									<Scale className="size-3.5 shrink-0" />
-									{tDetail("sourceNotice")}
+						{/*
+						 * A disclaimer on its own card asks to be read like the content above it. It is
+						 * a footnote — so it gets footnote treatment, and the rail drops from three
+						 * stacked surfaces to two.
+						 */}
+						<div className="space-y-2 px-1 text-muted-foreground text-xs">
+							<p className="flex items-start gap-1.5">
+								<Scale className="mt-0.5 size-3.5 shrink-0" />
+								<span>{tDetail("sourceNotice")}</span>
+							</p>
+							{job.publishedAt ? (
+								<p className="pl-5">
+									{t("publishedAt")}: {formatDate(job.publishedAt, locale)}
 								</p>
-								{job.publishedAt ? (
-									<p>
-										{t("publishedAt")}: {formatDate(job.publishedAt, locale)}
-									</p>
-								) : null}
-							</CardContent>
-						</Card>
+							) : null}
+						</div>
 					</aside>
 				</div>
 			</div>
