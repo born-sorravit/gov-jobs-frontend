@@ -73,6 +73,84 @@ Two details the real data forced:
 - **Position-type id 0 is the source's own "ไม่มีข้อมูล" placeholder** and is not rendered;
   otherwise a third of the cards would carry a chip that says "no data".
 
+## Job detail
+
+`/jobs/[id]` is fully server-rendered. Three decisions worth knowing:
+
+- **No `loading.tsx` on this segment, deliberately.** A `loading.tsx` turns the route into a
+  stream, and Next commits the HTTP status with the first chunk — so `notFound()` resolved
+  later still returned **200**. Verified both ways: with the file, a missing announcement
+  answered 200; without it, 404. Announcements are removed from the source portal routinely
+  (four disappeared overnight during development), so these 404s are real and frequent, and
+  serving them as 200 would get dead pages indexed. Correct status wins over the skeleton.
+- **`notFound()` only on a real 404.** `apiFetch` raises `ApiError` carrying the status; any
+  other failure is rethrown. A cold backend must not render "this job doesn't exist" for an
+  announcement that does.
+- **Identical free-text blocks are printed once.** OCSC often writes the same sentence —
+  usually "รายละเอียดตามประกาศรับสมัคร" — into description, knowledge, skill, competency and
+  criteria. `JobTextSection` takes a shared `seen` set and skips a body already rendered,
+  which on real announcements collapses seven headings to three.
+
+The original announcement (`sourceUrl`) is the primary button, above the agency's
+application site — this is an index of public announcements, and a reader must always be
+able to reach and verify the source.
+
+**Not yet built:** Save job and Create alert. Both need authentication, which lands in
+steps 7–9; a button that does nothing is worse than no button.
+
+## Sessions
+
+Tokens live in **first-party httpOnly cookies set by this app**, never by the API.
+
+The frontend deploys to Vercel and the API to Render — different sites — so a cookie set by
+the API would be third-party, which Safari's ITP already blocks and Chrome is phasing out.
+Instead the route handlers under `src/app/api/auth/` call the API, take the tokens out of the
+response and write them as our own cookies. Nothing token-shaped ever reaches page
+JavaScript; a rendered page contains the user's name and no credentials.
+
+- `src/app/api/backend/[...path]` proxies **authenticated** calls, attaching the bearer token
+  server-side. Public job browsing still goes straight to the API, so the extra hop is not on
+  the path that matters for page load. The proxy drops the browser's `Cookie` header on the
+  way out and upstream `Set-Cookie` on the way back, so no other origin can write into our
+  session.
+- On a 401 it rotates once and retries. Concurrent requests share one in-flight refresh
+  promise — and because that only helps within a single instance, the API also forgives a
+  just-rotated token for a few seconds.
+- **Refreshing a stale session happens in `src/proxy.ts` (middleware).** It is the only
+  thing that runs before a page renders and can still write cookies. A server component
+  cannot do it — rotation revokes the presented token and the replacement could never be
+  persisted — and doing it on mount in the client meant a signed-out header for one frame on
+  every stale load. Middleware rewrites the request's own cookies too, so the page renders
+  with the new token in the same pass.
+
+Reading cookies in the locale layout makes every page dynamic; `/` is no longer statically
+prerendered.
+
+## Saved jobs
+
+The bookmark toggle is optimistic and invalidates exactly two keys: the saved id set and the
+saved list. The `["jobs", …]` keys are left alone — cards are marked client-side from the id
+set, so `GET /jobs` stays public and identical for everyone, and invalidating those keys
+would refetch every cached page for nothing.
+
+A signed-out visitor clicking bookmark is sent to `/login?next=<current path and query>` and
+returns to the same filtered list. `requireUser()` is the single place that gate lives, so
+every protected page bounces the same way.
+
+`/saved` renders its list client-side through the proxy, so the page HTML is the shell and
+the cards arrive after hydration — unlike `/jobs`, which is server-rendered because it is
+public and worth indexing.
+
+## Admin page
+
+`requireAdmin()` has two outcomes, deliberately: a signed-out visitor goes to
+`/login?next=/admin`, but a signed-in account **without** the role gets a 404. Bouncing them
+to a login form they have already passed would be a loop, and a 404 does not confirm the page
+exists. The sidebar hides the link for non-admins — an affordance, not the boundary; the API
+re-reads the role from the database on every admin request.
+
+The page is `robots: noindex`.
+
 ## Structure
 
 ```
@@ -100,6 +178,21 @@ deal with the envelope or with raw `Response` objects.
 
 Vercel. Set `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_SITE_URL` in the project
 environment; the backend's `CORS_ORIGINS` must include the deployed origin.
+
+## Tests
+
+```bash
+npm test   # vitest, 24 specs
+```
+
+Scoped deliberately to `src/lib/jobs-query.ts`: it is the one piece of logic that runs on
+**both** sides of the SSR boundary — the server page parses `searchParams`, the client hook
+parses `useSearchParams()` — and if the two ever disagree the result is a hydration mismatch
+or a pointless refetch on mount. The suite includes a build → parse round trip and checks
+that the same filters written differently produce the same TanStack Query key.
+
+No jsdom and no component tests. These are pure functions, and page behaviour is verified by
+driving the real app in a browser, which catches more than a shallow render would.
 
 ## Known gaps
 

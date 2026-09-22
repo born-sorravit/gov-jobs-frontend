@@ -1,6 +1,7 @@
 "use client";
 
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
+import { SaveJobButton } from "@/components/jobs/save-job-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
@@ -61,7 +62,10 @@ export function JobCard({ job, provinces, educationLevels, jobTypes }: JobCardPr
 					>
 						<span className="line-clamp-2">{job.title}</span>
 					</Link>
-					<JobStatusBadge status={job.status} />
+					<div className="flex shrink-0 items-center gap-1">
+						<JobStatusBadge status={job.status} />
+						<SaveJobButton jobId={job.id} />
+					</div>
 				</div>
 
 				<div className="min-w-0 space-y-1 text-muted-foreground text-sm">

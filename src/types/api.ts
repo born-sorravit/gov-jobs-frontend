@@ -109,8 +109,11 @@ export interface JobAlert {
 	notificationEmail: string;
 	frequency: AlertFrequency;
 	isActive: boolean;
+	/** Announcements discovered before this are never matched. Moves on create and resume. */
+	matchFrom: string;
 	lastSentAt: string | null;
 	createdAt: string;
+	matchCount: number;
 }
 
 export interface AuthUser {

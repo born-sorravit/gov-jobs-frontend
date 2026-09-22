@@ -1,8 +1,9 @@
 "use client";
 
+import { useSession } from "@/components/providers/session-provider";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
-import { Bell, Bookmark, Briefcase, Home, LayoutDashboard } from "lucide-react";
+import { Bell, Bookmark, Briefcase, Home, LayoutDashboard, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 const ITEMS = [
@@ -13,13 +14,19 @@ const ITEMS = [
 	{ href: "/dashboard", key: "dashboard", icon: LayoutDashboard },
 ] as const;
 
+/** Shown only to an admin. The page enforces this too; this just avoids a dead link. */
+const ADMIN_ITEM = { href: "/admin", key: "admin", icon: ShieldCheck } as const;
+
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 	const t = useTranslations("nav");
 	const pathname = usePathname();
+	const { user } = useSession();
+
+	const items = user?.role === "ADMIN" ? [...ITEMS, ADMIN_ITEM] : ITEMS;
 
 	return (
 		<nav className="grid gap-1">
-			{ITEMS.map(({ href, key, icon: Icon }) => {
+			{items.map(({ href, key, icon: Icon }) => {
 				// `/` must match exactly or it would light up on every page.
 				const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
 

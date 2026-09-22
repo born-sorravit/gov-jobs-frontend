@@ -1,5 +1,6 @@
 "use client";
 
+import { AccountMenu } from "@/components/layout/account-menu";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -80,6 +81,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
 							<LocaleSwitcher />
 						</Suspense>
 						<ThemeToggle />
+						<AccountMenu />
 					</div>
 				</header>
 
